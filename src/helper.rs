@@ -197,9 +197,9 @@ mod file {
     pub fn test_cases_path(problem: &Problem) -> crate::Result<String> {
         let conf = crate::config::Config::locate()?;
         let mut path = format!("{}/{}.tests.dat", conf.storage.code()?, conf.code.pick);
-
+        let safe_slug = problem.slug.replace("-", "_");
         path = path.replace("${fid}", &problem.fid.to_string());
-        path = path.replace("${slug}", &problem.slug.to_string());
+        path = path.replace("${slug}", &safe_slug);
         Ok(path)
     }
 
@@ -217,9 +217,9 @@ mod file {
             conf.code.pick,
             suffix(&lang)?,
         );
-
+        let safe_slug = problem.slug.replace("-", "_");
         path = path.replace("${fid}", &problem.fid.to_string());
-        path = path.replace("${slug}", &problem.slug.to_string());
+        path = path.replace("${slug}", &safe_slug);
 
         Ok(path)
     }
