@@ -193,14 +193,21 @@ mod file {
 
     use crate::{cache::models::Problem, Error};
 
+    /// Substitutes fid and slug values into the given path template.  
+    /// Replaces: - ${fid} with problem.fid - ${slug} with the slug where '-' is replaced by '_',
+    /// since some languages (e.g., Rust) don't support '-' in file names.
+    /// # Example:
+    /// ${fid}_${slug} -> 1.two-sum → 1_two_sum.py
+    fn expand_path_template(path: &str, problem: &Problem) -> String {
+        let safe_slug = problem.slug.replace("-", "_");
+        path.replace("${fid}", &problem.fid.to_string())
+            .replace("${slug}", &safe_slug)
+    }
     /// Generate test cases path by fid
     pub fn test_cases_path(problem: &Problem) -> crate::Result<String> {
         let conf = crate::config::Config::locate()?;
-        let mut path = format!("{}/{}.tests.dat", conf.storage.code()?, conf.code.pick);
-        let safe_slug = problem.slug.replace("-", "_");
-        path = path.replace("${fid}", &problem.fid.to_string());
-        path = path.replace("${slug}", &safe_slug);
-        Ok(path)
+        let raw_path = format!("{}/{}.tests.dat", conf.storage.code()?, conf.code.pick);
+        Ok(expand_path_template(&raw_path, problem))
     }
 
     /// Generate code path by fid
@@ -211,17 +218,14 @@ mod file {
             lang = l.ok_or(Error::NoneError)?;
         }
 
-        let mut path = format!(
+        let raw_path = format!(
             "{}/{}.{}",
             conf.storage.code()?,
             conf.code.pick,
             suffix(&lang)?,
         );
-        let safe_slug = problem.slug.replace("-", "_");
-        path = path.replace("${fid}", &problem.fid.to_string());
-        path = path.replace("${slug}", &safe_slug);
 
-        Ok(path)
+        Ok(expand_path_template(&raw_path, problem))
     }
 
     /// Load python scripts
